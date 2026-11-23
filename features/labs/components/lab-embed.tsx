@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { defaultValues } from "../define";
-import { demos } from "../demos.generated";
+import { DemoSlot } from "../demo-cache";
 import type { Control, CursorStep } from "../types";
 import { DemoBoundary } from "./demo-boundary";
 import { useCursorScript } from "./use-cursor-script";
@@ -16,7 +16,6 @@ import { useCursorScript } from "./use-cursor-script";
 function Inner({ slug, controls, cursor }: { slug: string; controls: Control[]; cursor?: CursorStep[] }) {
   const params = useSearchParams();
   const ref = useRef<HTMLDivElement>(null);
-  const Demo = demos[slug];
   const values = defaultValues(controls);
   const script = useCursorScript({
     steps: cursor,
@@ -47,7 +46,7 @@ function Inner({ slug, controls, cursor }: { slug: string; controls: Control[]; 
 
   return (
     <div ref={ref} className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-stage p-6">
-      <div style={{ transform: `scale(${scale})` }}><DemoBoundary slug={slug}>{Demo ? <Demo values={values} /> : null}</DemoBoundary></div>
+      <div style={{ transform: `scale(${scale})` }}><DemoBoundary slug={slug}><Suspense><DemoSlot slug={slug} values={values} /></Suspense></DemoBoundary></div>
       {script.overlay}
     </div>
   );

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { Suspense, ViewTransition, useCallback, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { CodePanelData } from "../data";
 import { defaultValues, randomValues } from "../define";
-import { demos } from "../demos.generated";
+import { DemoSlot } from "../demo-cache";
 import type { Control, CursorStep, LabValues } from "../types";
 import { CodePanel } from "./code-panel";
 import { DemoBoundary } from "./demo-boundary";
@@ -54,7 +54,6 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
   const previewRef = useRef<HTMLDivElement>(null);
   const snapshot = useRef<LabValues | null>(null);
   const hasControls = controls.length > 0;
-  const Demo = demos[slug];
 
   const setValue = useCallback((key: string, value: LabValues[string]) => setEdits((v) => ({ ...v, [key]: value })), []);
 
@@ -105,11 +104,10 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
       <ViewTransition name={`lab-${slug}`} share="lab-morph" default="none">
       <section className="flex min-h-[26rem] min-w-0 flex-col rounded-[2rem] bg-stage p-3 lg:min-h-[35rem]">
         <div className="flex items-center gap-2">
-          <Tooltip content="All labs" side="bottom">
-            <Link href="/labs" transitionTypes={["lab-close"]} aria-label="Back to labs" className={circle}>
-              <ArrowLeft className="size-4" />
-            </Link>
-          </Tooltip>
+          {/* No Tooltip here: Base UI closes it with flushSync on press, which makes React skip the view transition. */}
+          <Link href="/labs" prefetch={true} transitionTypes={["lab-close"]} aria-label="Back to labs" className={circle}>
+            <ArrowLeft className="size-4" />
+          </Link>
           <Tabs selectedIndex={mode} onSelect={setMode} idPrefix="lab-mode" aria-label="View" className="rounded-full bg-inset-2">
             <TabsItem index={0} label="Preview" />
             <TabsItem index={1} label="Code" />
@@ -146,13 +144,13 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
                     muted
                     autoPlay
                   />
-                ) : Demo ? (
+                ) : (
                   <DemoBoundary slug={slug}>
                     <Suspense fallback={<Skeleton className="h-40 w-64 rounded-3xl" />}>
-                      <Demo values={values} />
+                      <DemoSlot slug={slug} values={values} />
                     </Suspense>
                   </DemoBoundary>
-                ) : null}
+                )}
             </div>
             {script.overlay}
 

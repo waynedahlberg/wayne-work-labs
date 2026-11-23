@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ViewTransition, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import type { LabAssets } from "../data";
+import { preloadDemo } from "../demo-cache";
 import { useIcons } from "@/lib/icon-context";
 
 const subscribeNone = () => () => {};
@@ -27,6 +28,26 @@ export function LabCard({ lab }: { lab: LabCardData }) {
   const mounted = useSyncExternalStore(subscribeNone, () => true, () => false);
   const [playing, setPlaying] = useState(false);
   const video = useRef<HTMLVideoElement>(null);
+  const root = useRef<HTMLDivElement>(null);
+
+  // Warm the demo chunk once the card is on screen, so opening it never waits.
+  useEffect(() => {
+    const el = root.current;
+    if (!el) return;
+    const idle = (cb: () => void) =>
+      typeof window.requestIdleCallback === "function" ? window.requestIdleCallback(cb) : setTimeout(cb, 200);
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          idle(() => preloadDemo(lab.slug));
+          io.disconnect();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [lab.slug]);
 
   const theme = mounted && resolvedTheme === "light" ? "light" : "dark";
   const hover = lab.assets.hover[theme] ?? lab.assets.hover.dark ?? lab.assets.hover.light;
@@ -45,8 +66,14 @@ export function LabCard({ lab }: { lab: LabCardData }) {
   return (
     <ViewTransition name={`lab-${lab.slug}`} share="lab-morph" default="none">
     <div
+      ref={root}
       className="group relative isolate rounded-[2rem] bg-stage p-2"
-      onPointerEnter={(e) => e.pointerType === "mouse" && hover && setPlaying(true)}
+      onPointerDown={() => preloadDemo(lab.slug)}
+      onFocus={() => preloadDemo(lab.slug)}
+      onPointerEnter={(e) => {
+        preloadDemo(lab.slug);
+        if (e.pointerType === "mouse" && hover) setPlaying(true);
+      }}
       onPointerLeave={(e) => e.pointerType === "mouse" && setPlaying(false)}
     >
       <Link

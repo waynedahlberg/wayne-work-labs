@@ -27,11 +27,11 @@ const meta =
 const withDemo = slugs.filter((s) => existsSync(path.join(labsDir, s, "Demo.tsx")));
 const demos =
   banner +
-  `"use client";\n\nimport { lazy, type ComponentType } from "react";\nimport type { DemoProps } from "./types";\n\n` +
-  `export const demos: Record<string, ComponentType<DemoProps>> = {\n` +
-  withDemo
-    .map((s) => `  "${s}": lazy(() => import("@/labs/${s}/Demo")),`)
-    .join("\n") +
+  `import type { ComponentType } from "react";\nimport type { DemoProps } from "./types";\n\n` +
+  `type DemoModule = { default: ComponentType<DemoProps> };\n\n` +
+  `/** One dynamic import per lab, so each demo is its own chunk. See demo-cache.ts. */\n` +
+  `export const demoLoaders: Record<string, () => Promise<DemoModule>> = {\n` +
+  withDemo.map((s) => `  "${s}": () => import("@/labs/${s}/Demo"),`).join("\n") +
   `\n};\n`;
 
 // Captured assets (thumbnails + hover videos) found in public/labs/<slug>/.
@@ -55,5 +55,5 @@ const assetsSrc =
 
 writeFileSync(path.join(outDir, "assets.generated.ts"), assetsSrc);
 writeFileSync(path.join(outDir, "registry.generated.ts"), meta);
-writeFileSync(path.join(outDir, "demos.generated.tsx"), demos);
+writeFileSync(path.join(outDir, "demos.generated.ts"), demos);
 console.log(`labs registry: ${slugs.length} lab(s)`);
