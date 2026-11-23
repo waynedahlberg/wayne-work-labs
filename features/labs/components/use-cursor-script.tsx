@@ -27,6 +27,7 @@ function fire(el: Element, types: string[], extra: Record<string, unknown> = {})
     clientY: rect.top + rect.height / 2,
     button: 0,
     pointerType: "mouse",
+    pointerId: 1,
     isPrimary: true,
     ...extra,
   };
@@ -147,6 +148,29 @@ export function useCursorScript({
             setNativeValue(el, text);
             await sleep(step.ms ?? 70);
           }
+          break;
+        }
+        case "drag": {
+          const el = step.to ? await moveTo(step.to) : current;
+          if (!el || !alive()) break;
+          const r = el.getBoundingClientRect();
+          const x0 = r.left + r.width / 2;
+          const y0 = r.top + r.height / 2;
+          const base = toLocal(el);
+          const dy = step.dy ?? 0;
+          setCursor((c) => ({ ...c, down: true, ms: 0 }));
+          fire(el, ["pointerdown", "mousedown"], { buttons: 1, clientX: x0, clientY: y0 });
+          const frames = Math.max(2, Math.round((step.ms ?? 800) / 16));
+          for (let i = 1; i <= frames && alive(); i++) {
+            const t = i / frames;
+            const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+            setCursor((c) => ({ ...c, x: base.x + step.dx * e, y: base.y + dy * e, ms: 0 }));
+            fire(el, ["pointermove", "mousemove"], { buttons: 1, clientX: x0 + step.dx * e, clientY: y0 + dy * e });
+            await sleep(16);
+          }
+          fire(el, ["pointerup", "mouseup"], { clientX: x0 + step.dx, clientY: y0 + dy });
+          setCursor((c) => ({ ...c, down: false }));
+          await sleep(120);
           break;
         }
         case "wait":

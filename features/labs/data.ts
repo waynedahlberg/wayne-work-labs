@@ -5,6 +5,7 @@ import { codeToHtml } from "shiki";
 import { marked } from "marked";
 import { cacheLife } from "next/cache";
 import { allLabs } from "./registry.generated";
+import { labAssets, type LabAssets } from "./assets.generated";
 import type { LabMeta } from "./types";
 
 const root = process.cwd();
@@ -49,38 +50,14 @@ export async function getNewSlugs(): Promise<Set<string>> {
 }
 
 // ---------------------------------------------------------------------------
-// Static assets captured by `pnpm labs:capture`, living in /public/labs/<slug>
+// Static assets captured by `pnpm labs:capture`, living in /public/labs/<slug>.
+// Discovered by scripts/generate-registry.mjs, so there is no runtime file I/O.
 // ---------------------------------------------------------------------------
 
-export interface LabAssets {
-  thumb: { dark?: string; light?: string };
-  hover: { dark?: string; light?: string };
-}
+export type { LabAssets } from "./assets.generated";
 
-async function exists(p: string) {
-  try {
-    await fs.access(p);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function getLabAssets(slug: string): Promise<LabAssets> {
-  "use cache";
-  cacheFor();
-  const base = `/labs/${slug}`;
-  const pick = async (name: string) => {
-    const file = path.join(root, "public", base, name);
-    return (await exists(file)) ? `${base}/${name}` : undefined;
-  };
-  const [td, tl, hd, hl] = await Promise.all([
-    pick("thumb-dark.jpg"),
-    pick("thumb-light.jpg"),
-    pick("hover-dark.webm"),
-    pick("hover-light.webm"),
-  ]);
-  return { thumb: { dark: td, light: tl }, hover: { dark: hd, light: hl } };
+export function getLabAssets(slug: string): LabAssets {
+  return labAssets[slug] ?? { thumb: {}, hover: {} };
 }
 
 // ---------------------------------------------------------------------------

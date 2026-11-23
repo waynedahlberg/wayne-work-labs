@@ -34,6 +34,26 @@ const demos =
     .join("\n") +
   `\n};\n`;
 
+// Captured assets (thumbnails + hover videos) found in public/labs/<slug>/.
+const publicDir = path.join(root, "public/labs");
+const assets = Object.fromEntries(
+  slugs.map((s) => {
+    const pick = (name) => (existsSync(path.join(publicDir, s, name)) ? `/labs/${s}/${name}` : undefined);
+    return [
+      s,
+      {
+        thumb: { dark: pick("thumb-dark.jpg"), light: pick("thumb-light.jpg") },
+        hover: { dark: pick("hover-dark.webm"), light: pick("hover-light.webm") },
+      },
+    ];
+  }),
+);
+const assetsSrc =
+  banner +
+  `export interface LabAssets {\n  thumb: { dark?: string; light?: string };\n  hover: { dark?: string; light?: string };\n}\n\n` +
+  `export const labAssets: Record<string, LabAssets> = ${JSON.stringify(assets, null, 2)};\n`;
+
+writeFileSync(path.join(outDir, "assets.generated.ts"), assetsSrc);
 writeFileSync(path.join(outDir, "registry.generated.ts"), meta);
 writeFileSync(path.join(outDir, "demos.generated.tsx"), demos);
 console.log(`labs registry: ${slugs.length} lab(s)`);

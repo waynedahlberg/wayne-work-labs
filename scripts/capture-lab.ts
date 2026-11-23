@@ -125,6 +125,8 @@ async function main() {
         }
       }
     }
+    // Pick up the new files in the generated assets map.
+    await run("node", ["scripts/generate-registry.mjs"]);
   } finally {
     await browser.close();
     server?.kill();

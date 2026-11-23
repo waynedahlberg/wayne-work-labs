@@ -6,16 +6,14 @@ import { LabCard } from "./lab-card";
 export async function LabsTeaser({ limit = 6 }: { limit?: number }) {
   const labs = getFeaturedLabs(limit);
   const newSlugs = await getNewSlugs();
-  const cards = await Promise.all(
-    labs.map(async (l) => ({
-      slug: l.slug,
-      title: l.title,
-      interaction: l.interaction,
-      isNew: newSlugs.has(l.slug),
-      hasCursor: Boolean(l.cursor?.length),
-      assets: await getLabAssets(l.slug),
-    })),
-  );
+  const cards = labs.map((l) => ({
+    slug: l.slug,
+    title: l.title,
+    interaction: l.interaction,
+    isNew: newSlugs.has(l.slug),
+    hasCursor: Boolean(l.cursor?.length),
+    assets: getLabAssets(l.slug),
+  }));
 
   return (
     <section aria-labelledby="labs-heading">

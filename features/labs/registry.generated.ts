@@ -3,5 +3,6 @@ import type { LabMeta } from "./types";
 import lab_press_button from "@/labs/press-button/lab";
 import lab_soft_select from "@/labs/soft-select/lab";
 import lab_type_field from "@/labs/type-field/lab";
+import lab_value_scrubber_dial from "@/labs/value-scrubber-dial/lab";
 
-export const allLabs: LabMeta[] = [lab_press_button, lab_soft_select, lab_type_field];
+export const allLabs: LabMeta[] = [lab_press_button, lab_soft_select, lab_type_field, lab_value_scrubber_dial];

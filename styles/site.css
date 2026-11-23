@@ -12,12 +12,12 @@
   --radius-inset: 1.5rem;
 }
 
-/* Allo roundness axis (0 sharp … 100 round). 50 is Allo's "friendly" default.
-   Note: FF sets font-variation-settings for weight on some labels, which
-   resets unlisted axes to their default, so keep this at the default (50)
-   unless those call sites also carry ROND. */
+/* Allo roundness axis (0 sharp … 100 round). We run 25: a little tighter than
+   Allo's friendly default of 50. Fluid Functionalism's weight tokens
+   (lib/font-weight.ts, globals.css) carry ROND too, so it holds everywhere;
+   keep any new font-variation-settings consistent with that. */
 html {
-  --allo-rond: 50;
+  --allo-rond: 25;
   font-variation-settings: "ROND" var(--allo-rond);
 }
 

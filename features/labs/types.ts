@@ -56,6 +56,8 @@ export type CursorStep =
   | { do: "click"; to?: string }
   | { do: "press"; to?: string; hold?: number }
   | { do: "type"; to: string; text: string; ms?: number }
+  /** Press on `to` (or the current target), move by dx/dy px over `ms`, release. */
+  | { do: "drag"; to?: string; dx: number; dy?: number; ms?: number }
   | { do: "wait"; ms: number }
   | { do: "set"; key: string; value: string | number | boolean };
 

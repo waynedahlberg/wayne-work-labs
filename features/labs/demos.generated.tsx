@@ -8,4 +8,5 @@ export const demos: Record<string, ComponentType<DemoProps>> = {
   "press-button": lazy(() => import("@/labs/press-button/Demo")),
   "soft-select": lazy(() => import("@/labs/soft-select/Demo")),
   "type-field": lazy(() => import("@/labs/type-field/Demo")),
+  "value-scrubber-dial": lazy(() => import("@/labs/value-scrubber-dial/Demo")),
 };

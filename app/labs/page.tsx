@@ -11,17 +11,15 @@ export const metadata: Metadata = {
 
 export default async function LabsPage() {
   const newSlugs = await getNewSlugs();
-  const labs = await Promise.all(
-    getLabs().map(async (l) => ({
-      slug: l.slug,
-      title: l.title,
-      interaction: l.interaction,
-      tags: l.tags,
-      isNew: newSlugs.has(l.slug),
-      hasCursor: Boolean(l.cursor?.length),
-      assets: await getLabAssets(l.slug),
-    })),
-  );
+  const labs = getLabs().map((l) => ({
+    slug: l.slug,
+    title: l.title,
+    interaction: l.interaction,
+    tags: l.tags,
+    isNew: newSlugs.has(l.slug),
+    hasCursor: Boolean(l.cursor?.length),
+    assets: getLabAssets(l.slug),
+  }));
 
   return (
     <PageTransition>

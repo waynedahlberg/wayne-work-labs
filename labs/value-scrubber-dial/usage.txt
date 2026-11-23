@@ -1,0 +1,11 @@
+import { ValueScrubberDial } from "./ValueScrubberDial";
+
+<ValueScrubberDial
+  max={60}
+  defaultValue={1}
+  spacing={14}
+  magnify={0.7}
+  blur={3}
+  snap
+  onChange={(value) => console.log(value)}
+/>
