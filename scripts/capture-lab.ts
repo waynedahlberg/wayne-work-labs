@@ -1,17 +1,16 @@
 /**
  * pnpm labs:capture [slug…] [--missing] [--theme=dark|light] [--base=URL]
  *
- * For each react lab, renders /labs/<slug>/embed in Chrome and writes, to
- * public/labs/<slug>/:
- *   thumb-{dark,light}.jpg   still (after `thumbStep` of the cursor script)
- *   hover-{dark,light}.mp4   the full cursor run (H.264, via ffmpeg), for the gallery hover
+ * For each react lab, renders /labs/<slug>/embed in Chrome and writes
+ * public/labs/<slug>/thumb-{dark,light}.jpg: a still taken after `thumbStep`
+ * of the cursor script. Stills are the OG image and the placeholder shown in a
+ * card or stage while its live demo loads. Cards themselves run the real demo.
  *
  * Without --base it builds the site and serves it on :3100 (so the dev
  * overlay never lands in a capture). Uses your installed Google Chrome.
  */
-import { spawn, spawnSync, type ChildProcess } from "node:child_process";
+import { spawn, type ChildProcess } from "node:child_process";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 import { chromium, type Browser } from "playwright-core";
 import { allLabs } from "@/features/labs/registry.generated";
@@ -83,8 +82,6 @@ async function main() {
 
       for (const theme of themes) {
         const thumbFile = path.join(outDir, `thumb-${theme}.jpg`);
-        const hoverFile = path.join(outDir, `hover-${theme}.mp4`);
-        const tmpWebm = path.join(os.tmpdir(), `lab-${lab.slug}-${theme}-${Date.now()}.webm`);
         const base_ = `${base}/labs/${lab.slug}/embed`;
         const ctxOpts = { viewport: { width: W, height: H }, colorScheme: theme } as const;
         const init = `localStorage.setItem("theme", "${theme}")`;
@@ -105,39 +102,6 @@ async function main() {
           console.log(`✓ ${lab.slug} thumb-${theme}.jpg`);
         }
 
-        // --- hover video -----------------------------------------------
-        if (lab.cursor?.length && !(onlyMissing && (await exists(hoverFile)))) {
-          // Record at a 2x viewport and scale the demo 2x inside it
-          // (`?scale=2`) to match the thumbnail. Recording starts only once
-          // the page is ready, so the clip has no blank lead-in.
-          const ctx = await browser.newContext({ ...ctxOpts, viewport: { width: W * 2, height: H * 2 } });
-          await ctx.addInitScript(init);
-          const page = await ctx.newPage();
-          await page.goto(`${base_}?scale=2`, { waitUntil: "networkidle" });
-          await page.waitForFunction(() => (window as never as { __labReady?: boolean }).__labReady, undefined, { timeout: 20_000 });
-          await page.evaluate(() => document.fonts.ready);
-          await page.waitForTimeout(500);
-          await page.screencast.start({ path: tmpWebm, size: { width: W * 2, height: H * 2 } });
-          await page.evaluate(() => (window as never as { __labRun: () => void }).__labRun());
-          await page.waitForFunction(() => (window as never as { __labDone?: boolean }).__labDone === true, undefined, { timeout: 60_000 });
-          await page.waitForTimeout(400);
-          await page.screencast.stop();
-          await ctx.close();
-          // H.264 MP4 plays identically in every browser. The raw Playwright
-          // WebM has no duration/cues and renders unpredictably in some.
-          // Playwright encodes limited-range BT.601 without tagging it, so we
-          // pass the pixels through and tag them truthfully; converting
-          // matrices instead would tint flat surfaces away from the thumbnail.
-          const enc = spawnSync(
-            "ffmpeg",
-            ["-v", "error", "-y", "-i", tmpWebm, "-an", "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-tune", "animation", "-pix_fmt", "yuv420p",
-             "-colorspace", "smpte170m", "-color_primaries", "bt709", "-color_trc", "bt709", "-color_range", "tv", "-movflags", "+faststart", hoverFile],
-            { stdio: "inherit" },
-          );
-          await fs.rm(tmpWebm, { force: true });
-          if (enc.status !== 0) throw new Error("ffmpeg failed or is missing. Install it (brew install ffmpeg) and retry.");
-          console.log(`✓ ${lab.slug} hover-${theme}.mp4`);
-        }
       }
     }
     // Pick up the new files in the generated assets map.

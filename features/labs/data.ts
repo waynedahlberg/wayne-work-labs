@@ -6,6 +6,7 @@ import { marked } from "marked";
 import { cacheLife } from "next/cache";
 import { allLabs } from "./registry.generated";
 import { labAssets, type LabAssets } from "./assets.generated";
+import type { LabCardData } from "./components/lab-card";
 import type { LabMeta } from "./types";
 
 const root = process.cwd();
@@ -57,7 +58,21 @@ export async function getNewSlugs(): Promise<Set<string>> {
 export type { LabAssets } from "./assets.generated";
 
 export function getLabAssets(slug: string): LabAssets {
-  return labAssets[slug] ?? { thumb: {}, hover: {} };
+  return labAssets[slug] ?? { thumb: {} };
+}
+
+/** What a gallery or teaser card needs, serializable for the client. */
+export function toCardData(lab: LabMeta, newSlugs: Set<string>): LabCardData {
+  return {
+    slug: lab.slug,
+    title: lab.title,
+    interaction: lab.interaction,
+    kind: lab.kind,
+    isNew: newSlugs.has(lab.slug),
+    cursor: lab.cursor,
+    video: lab.video,
+    poster: getLabAssets(lab.slug).thumb,
+  };
 }
 
 // ---------------------------------------------------------------------------

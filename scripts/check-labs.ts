@@ -86,7 +86,7 @@ for (const lab of allLabs) {
 
   // Captures
   if (lab.kind === "react" && !lab.draft) {
-    for (const f of ["thumb-dark.jpg", "thumb-light.jpg", ...(lab.cursor?.length ? ["hover-dark.mp4", "hover-light.mp4"] : [])])
+    for (const f of ["thumb-dark.jpg", "thumb-light.jpg"])
       if (!fs.existsSync(path.join(root, "public/labs", s, f))) warn(s, `missing public/labs/${s}/${f}: run pnpm labs:capture ${s}`);
   }
 

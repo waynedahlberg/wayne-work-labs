@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { PageTransition } from "@/components/page-transition";
-import { getLabAssets, getLabs, getNewSlugs } from "@/features/labs/data";
+import { getLabs, getNewSlugs, toCardData } from "@/features/labs/data";
 import { LabGallery } from "@/features/labs/components/lab-gallery";
 import { INTERACTIONS } from "@/features/labs/types";
 
@@ -11,15 +11,7 @@ export const metadata: Metadata = {
 
 export default async function LabsPage() {
   const newSlugs = await getNewSlugs();
-  const labs = getLabs().map((l) => ({
-    slug: l.slug,
-    title: l.title,
-    interaction: l.interaction,
-    tags: l.tags,
-    isNew: newSlugs.has(l.slug),
-    hasCursor: Boolean(l.cursor?.length),
-    assets: getLabAssets(l.slug),
-  }));
+  const labs = getLabs().map((l) => ({ ...toCardData(l, newSlugs), tags: l.tags }));
 
   return (
     <PageTransition>

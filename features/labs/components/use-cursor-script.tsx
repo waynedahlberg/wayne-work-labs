@@ -13,8 +13,10 @@ interface CursorState {
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-function find(name: string): HTMLElement | null {
-  return document.querySelector<HTMLElement>(`[data-cursor="${name}"]`);
+/** Look inside the scope first (many live demos share a page), then anywhere. */
+function find(name: string, scope?: HTMLElement | null): HTMLElement | null {
+  const sel = `[data-cursor="${name}"]`;
+  return scope?.querySelector<HTMLElement>(sel) ?? document.querySelector<HTMLElement>(sel);
 }
 
 function fire(el: Element, types: string[], extra: Record<string, unknown> = {}) {
@@ -93,7 +95,7 @@ export function useCursorScript({
 
     let current: HTMLElement | null = null;
     const moveTo = async (name: string, ms = 650) => {
-      const el = find(name);
+      const el = find(name, container.current);
       if (!el || !alive()) return null;
       const { x, y } = toLocal(el);
       setCursor((c) => ({ ...c, x, y, ms, visible: true }));
@@ -107,7 +109,7 @@ export function useCursorScript({
     // Appear on the first target instead of sweeping in from a corner, so
     // the clip has no lateral travel before anything happens.
     const firstTarget = steps.find((st) => "to" in st && st.to) as { to: string } | undefined;
-    const startEl = firstTarget ? find(firstTarget.to) : null;
+    const startEl = firstTarget ? find(firstTarget.to, container.current) : null;
     const box = container.current?.getBoundingClientRect();
     const start = startEl ? toLocal(startEl) : { x: (box?.width ?? 400) / 2, y: (box?.height ?? 300) / 2 };
     setCursor({ ...start, visible: false, down: false, ms: 0 });

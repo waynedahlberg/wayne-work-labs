@@ -81,49 +81,30 @@ html.dark .shiki span {
 ::view-transition {
   pointer-events: none;
 }
-/* Card ↔ stage morph. The group clips to a fixed radius so corners never
-   stretch with the snapshot; old/new fill the group and crossfade (thumbnail
-   out, live demo in) instead of being squashed to their own aspect ratios. */
-::view-transition-group(.lab-morph) {
-  animation-duration: 560ms;
-  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
-  border-radius: 2rem;
-  overflow: clip;
+/* ---- Live demos --------------------------------------------------------
+   Each lab has one live host element that moves between a card's slot and the
+   stage's slot (features/labs/live/host.tsx). It is centered in whichever slot
+   holds it and scaled by --fit so it always fits. */
+.lab-host {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max-content;
+  max-width: none;
+  transform: translate(-50%, -50%) scale(var(--fit, 1));
+  transform-origin: center;
 }
-::view-transition-image-pair(.lab-morph) {
-  isolation: auto;
+/* The still behind a slot fades out once the live demo has rendered. */
+.lab-poster {
+  transition: opacity 200ms ease-out;
 }
-::view-transition-old(.lab-morph),
-::view-transition-new(.lab-morph) {
-  height: 100%;
-  width: 100%;
-  object-fit: cover;
-  object-position: top center;
-  mix-blend-mode: normal;
+[data-lab-slot]:has([data-ready]) > .lab-poster {
+  opacity: 0;
 }
-::view-transition-old(.lab-morph) {
-  animation: 240ms ease-in both lab-morph-out;
+html {
+  scrollbar-gutter: stable;
 }
-::view-transition-new(.lab-morph) {
-  animation: 320ms ease-out 140ms both lab-morph-in;
-}
-@keyframes lab-morph-out {
-  to {
-    opacity: 0;
-  }
-}
-@keyframes lab-morph-in {
-  from {
-    opacity: 0;
-  }
-}
-/* The rest of the page just crossfades during a morph. */
-::view-transition-old(.lab-fade) {
-  animation: 180ms ease-in both lab-fade reverse;
-}
-::view-transition-new(.lab-fade) {
-  animation: 260ms ease-out 120ms both lab-fade;
-}
+
 ::view-transition-old(.nav-forward) {
   --slide-offset: -40px;
   animation:

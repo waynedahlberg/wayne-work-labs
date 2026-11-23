@@ -4,6 +4,7 @@ import "allo-font";
 import "./globals.css";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site-header";
+import { getLabs } from "@/features/labs/data";
 
 const mono = Geist_Mono({
   variable: "--font-geist-mono",
@@ -29,13 +30,15 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({ children, modal }: LayoutProps<"/">) {
+  const labs = getLabs().map((l) => ({ slug: l.slug, controls: l.controls ?? [] }));
   return (
     <html lang="en" suppressHydrationWarning className={`${mono.variable} antialiased`}>
       <body className="min-h-dvh bg-background text-foreground">
-        <Providers>
+        <Providers labs={labs}>
           <SiteHeader />
           {children}
+          {modal}
         </Providers>
       </body>
     </html>

@@ -16,13 +16,31 @@ This repo is the canonical wayne.work site (Next.js App Router, pnpm, Vercel). T
 
 ```
 app/                    routes (thin). / and /labs and /labs/[slug] (+ /embed, opengraph-image)
+app/@modal/             the intercepting slot: /labs/[slug] opens as an overlay over the page that linked to it
 components/ui/          Fluid Functionalism (FF) + shadcn: the site-wide design system. Installed code, do not edit
-styles/site.css         our tokens on top of FF: stage / inset surfaces, view transitions, code highlighting
-features/labs/          the labs ENGINE (stage, inspector, code panel, cursor runner, registry, data)
+styles/site.css         our tokens on top of FF: stage / inset surfaces, live-demo host, code highlighting
+features/labs/          the labs ENGINE (live host, cards, detail overlay, inspector, code panel, cursor runner, registry, data)
 labs/<slug>/            the labs CONTENT: one self-contained folder per lab
-public/labs/<slug>/     captured thumbnails + hover videos (generated, committed)
+public/labs/<slug>/     captured stills (thumb-{dark,light}.jpg) and, for video labs, the recording (generated/committed)
 scripts/                generate-registry, labs:new, labs:check, labs:capture
 ```
+
+## How Labs work (read before touching the engine)
+
+The model is Bencho's: **one live instance, one gallery that never unmounts, one box that grows.**
+
+- **Live on cards.** A react lab's gallery/teaser card runs the real, interactive demo. It is lazy: nothing mounts until the card is within ~300px of the viewport; a captured still (`Poster`) fills the card until the demo has rendered. A **video** lab's card plays its recording (lazy, muted, loops while visible) and the whole card opens the lab.
+- **Single instance (`features/labs/live/host.tsx`).** Each lab's demo is rendered once, into a host element outside any card or stage. Cards and the detail stage own *slots* (`FitSlot`); the host element is moved (appended) into whichever slot claimed it last and scaled by `--fit` to fit. Opening a lab moves the same DOM node and React state from the card into the stage; closing moves it back. Never render a second copy of a demo for the stage, a thumbnail swap, or an iframe. Inspector values live in the provider (`useLabHost().values`), so card and stage always agree.
+- **Overlay, not page swap.** From the gallery or the home teaser, `/labs/[slug]` is intercepted by `app/@modal/(.)labs/[slug]` and opens `LabDetail` (`mode="overlay"`) over the still-mounted page. Direct loads (shared links, refresh, crawlers, OG) hit `app/labs/[slug]` and render the same `LabDetail` as a normal page (`mode="page"`).
+- **The morph.** In `lab-detail.tsx` the stage "block" starts at the clicked card's exact rectangle (`[data-lab-card="<slug>"]`) and animates its real `left/top/width/height` to the stage rectangle (constant radius, no snapshot scaling); scrim, controls, inspector and info fade in staggered afterwards. Close runs it in reverse (back button, scrim, Esc), then `router.back()`. Browser back/forward unmounts without the reverse animation. Prev/next inside the overlay use `replace` and skip the morph.
+- **Rules that keep it working.**
+  - Card links must be `<Link prefetch scroll={false}>` to `/labs/<slug>` so the overlay's payload is ready on click.
+  - Never wrap a navigation link in an FF/Base UI `Tooltip` (it calls `flushSync` on press).
+  - `cacheComponents` keeps closed routes alive (hidden) via Activity, so `LabDetail` is keyed on `useRouter().bfcacheId` and its effects must clean up (host claims, scroll lock, key listener). Slot content from a previous open must never leak into the next.
+  - `app/@modal/[...catchAll]` and `default.tsx` return `null`: they are what clear the overlay on soft navigation.
+  - A demo's root must be sized by its content (it is centered and scaled to fit its slot). Don't depend on the viewport or a parent's height; fixed intrinsic sizes are fine.
+  - Many live demos share a page: scope `document.querySelector` to your own subtree and never rely on global ids; `data-cursor` names are looked up inside the slot first.
+- **Check it in a production build** (`pnpm build && pnpm start`); dev compiles routes on demand and doesn't prefetch the same way.
 
 ## Design system
 
@@ -35,8 +53,8 @@ scripts/                generate-registry, labs:new, labs:check, labs:capture
 ## Next.js 16 notes
 
 - `cacheComponents` is ON. Request-time reads (`params`, `searchParams`, `cookies()`, `headers()`) must sit under `<Suspense>`; file reads and `Date.now()` must live in a `'use cache'` scope (see `features/labs/data.ts`). Read `node_modules/next/dist/docs/` before using a Next API from memory.
-- Route navigations are transitions, so React `<ViewTransition>` works. The whole gallery card and the detail stage section share ``name={`lab-${slug}`}`` with `share="lab-morph"`, so the card morphs into the stage (thumbnail crossfades to the live demo) and back. Rules that keep it working: card links use `prefetch={true}` and `transitionTypes={["lab-open"]}` (the back button uses `"lab-close"`); the stage must render in the same commit as the navigation, so don't put new Suspense boundaries above it; put `<PageTransition>` in each `page.tsx`, not in layouts. Demos are preloaded (`features/labs/demo-cache.ts`) when a card is on screen, hovered, focused or pressed, and read synchronously by `DemoSlot`, so the stage has its content on the first frame of the morph; keep it that way (don't wrap a demo in `React.lazy`). Never wrap a navigation link in a Fluid Functionalism/Base UI `Tooltip` (or anything that calls `flushSync` on press): React cancels the view transition when `flushSync` runs while it is preparing, and the morph silently falls back to nothing. Check it in a production build (`pnpm build && pnpm start`): dev does not prefetch the same way, so the pair may not form there.
-- In dev, edits to a lab's files in the Code tab are cached; restart the dev server to see them. Captured thumbnails/videos are discovered by `pnpm labs:sync` (run automatically before dev/build and after `labs:capture`), so a new lab's captures appear as soon as the generated file updates.
+- Page-to-page navigations may use `<PageTransition>` (React `<ViewTransition>`); put it in each `page.tsx`, not layouts. Lab detail is **not** a page transition: see "How Labs work".
+- In dev, edits to a lab's files in the Code tab are cached; restart the dev server to see them. Captured stills are discovered by `pnpm labs:sync` (run automatically before dev/build and after `labs:capture`), so a new lab's captures appear as soon as the generated file updates.
 
 ## Adding a lab
 
@@ -44,7 +62,7 @@ scripts/                generate-registry, labs:new, labs:check, labs:capture
 pnpm labs:new <slug> --title "Title" --interaction Press --tags React,Color
 # edit labs/<slug>/, then:
 pnpm labs:check               # contract + boundary checks (must pass)
-pnpm labs:capture <slug>      # thumbnails + hover video (builds, serves :3100, uses your Chrome; needs ffmpeg for the MP4)
+pnpm labs:capture <slug>      # still images for OG + loading placeholder (builds, serves :3100, uses your Chrome)
 # remove `draft: true`, bump updatedAt, open a PR
 ```
 
@@ -63,11 +81,11 @@ Rules for a lab (the boundaries are enforced by ESLint):
 1. **Self-contained.** Import only from `@/components/ui/*`, `@/lib/*`, `@/features/labs/{types,define}`, and its own folder. Never another lab, `app/`, or the engine.
 2. **Minimal UI.** Build only what the title says. No extra labels, counts, sparkle icons or panels; complexity is earned and disclosed progressively.
 3. **Knobs.** Every tunable value is a `controls` entry (`select`, `toggle`, `slider`) with a sensible default. The inspector, Randomize, Reset and share-links come for free. Slider `default` must sit inside `min`/`max`.
-4. **Cursor script (optional).** `cursor` is a list of steps (`move`, `click`, `press`, `drag`, `type`, `wait`, `set`) targeting `data-cursor="name"` elements. It powers the play button, the hover video and the thumbnail. Keep it under ~10 seconds and make it end where it started. `thumbStep` is the step index after which the still is captured.
-5. **Types of lab.** `kind: "react"` runs live. `kind: "video"` (iOS, macOS, 3D, Wasm…) needs `video: { src, poster? }` under `/public/labs/<slug>/` plus `files` with the key snippets (Swift, Rust, WGSL… are highlighted by extension). App-sized work belongs in Projects, not Labs.
+4. **Cursor script (optional).** `cursor` is a list of steps (`move`, `click`, `press`, `drag`, `type`, `wait`, `set`) targeting `data-cursor="name"` elements. It powers the play button on the card and on the stage, and the still. Keep it under ~10 seconds and make it end where it started. `thumbStep` is the step index after which the still is captured.
+5. **Two kinds of lab.** `kind: "react"` (the default) is live on the card and in the stage: build it so it looks right at card size (about 380×285) and stage size, and make its natural size content-driven. `kind: "video"` is for iOS, macOS, 3D, Wasm and anything not interactive in a browser: it needs `video: { src, poster? }` (put the file under `/public/labs/<slug>/`) and `files` with the key snippets (Swift, Rust, WGSL… are highlighted by extension). The card plays the recording; the stage shows it with controls. No `Demo.tsx` for video labs. App-sized work belongs in Projects, not Labs.
 6. **Tags.** `interaction` is one of Hover, Press, Drag, Slide, Swipe, Type, Select, Loading. `tags` are domains: React, iOS, 3D, Vector, Color, Typography, Design System…
 7. **Bump `updatedAt`** (YYYY-MM-DD) whenever a lab changes. "New" is derived from `createdAt` (30 days).
-8. **Regenerate captures** for any lab whose look or script changed, in the same commit.
+8. **Regenerate stills** (`pnpm labs:capture <slug>`) for any react lab whose look or script changed, in the same commit. They are the OG image and the placeholder before the live demo loads, not what cards show.
 
 ## Workflow
 

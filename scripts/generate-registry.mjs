@@ -43,14 +43,13 @@ const assets = Object.fromEntries(
       s,
       {
         thumb: { dark: pick("thumb-dark.jpg"), light: pick("thumb-light.jpg") },
-        hover: { dark: pick("hover-dark.mp4"), light: pick("hover-light.mp4") },
       },
     ];
   }),
 );
 const assetsSrc =
   banner +
-  `export interface LabAssets {\n  thumb: { dark?: string; light?: string };\n  hover: { dark?: string; light?: string };\n}\n\n` +
+  `export interface LabAssets {\n  thumb: { dark?: string; light?: string };\n}\n\n` +
   `export const labAssets: Record<string, LabAssets> = ${JSON.stringify(assets, null, 2)};\n`;
 
 writeFileSync(path.join(outDir, "assets.generated.ts"), assetsSrc);

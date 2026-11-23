@@ -1,19 +1,12 @@
 import Link from "next/link";
-import { getFeaturedLabs, getLabAssets, getNewSlugs } from "../data";
+import { getFeaturedLabs, getNewSlugs, toCardData } from "../data";
 import { LabCard } from "./lab-card";
 
 /** Home-page lead-in: 3–6 featured labs and a link to the full gallery. */
 export async function LabsTeaser({ limit = 6 }: { limit?: number }) {
   const labs = getFeaturedLabs(limit);
   const newSlugs = await getNewSlugs();
-  const cards = labs.map((l) => ({
-    slug: l.slug,
-    title: l.title,
-    interaction: l.interaction,
-    isNew: newSlugs.has(l.slug),
-    hasCursor: Boolean(l.cursor?.length),
-    assets: getLabAssets(l.slug),
-  }));
+  const cards = labs.map((l) => toCardData(l, newSlugs));
 
   return (
     <section aria-labelledby="labs-heading">
