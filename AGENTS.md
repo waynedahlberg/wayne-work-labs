@@ -35,7 +35,7 @@ scripts/                generate-registry, labs:new, labs:check, labs:capture
 ## Next.js 16 notes
 
 - `cacheComponents` is ON. Request-time reads (`params`, `searchParams`, `cookies()`, `headers()`) must sit under `<Suspense>`; file reads and `Date.now()` must live in a `'use cache'` scope (see `features/labs/data.ts`). Read `node_modules/next/dist/docs/` before using a Next API from memory.
-- Route navigations are transitions, so React `<ViewTransition>` works. Gallery card ↔ detail stage share ``name={`lab-${slug}`}`` with `share="lab-morph"`. Put `<PageTransition>` in each `page.tsx`, not in layouts.
+- Route navigations are transitions, so React `<ViewTransition>` works. The whole gallery card and the detail stage section share ``name={`lab-${slug}`}`` with `share="lab-morph"`, so the card morphs into the stage (thumbnail crossfades to the live demo) and back. Rules that keep it working: card links use `prefetch={true}` and `transitionTypes={["lab-open"]}` (the back button uses `"lab-close"`); the stage must render in the same commit as the navigation, so don't put new Suspense boundaries above it; put `<PageTransition>` in each `page.tsx`, not in layouts. Check it in a production build (`pnpm build && pnpm start`): dev does not prefetch the same way, so the pair may not form there.
 - In dev, edits to a lab's files in the Code tab are cached; restart the dev server to see them. Captured thumbnails/videos are discovered by `pnpm labs:sync` (run automatically before dev/build and after `labs:capture`), so a new lab's captures appear as soon as the generated file updates.
 
 ## Adding a lab
@@ -44,7 +44,7 @@ scripts/                generate-registry, labs:new, labs:check, labs:capture
 pnpm labs:new <slug> --title "Title" --interaction Press --tags React,Color
 # edit labs/<slug>/, then:
 pnpm labs:check               # contract + boundary checks (must pass)
-pnpm labs:capture <slug>      # thumbnails + hover video (builds, serves :3100, uses your Chrome)
+pnpm labs:capture <slug>      # thumbnails + hover video (builds, serves :3100, uses your Chrome; needs ffmpeg for the MP4)
 # remove `draft: true`, bump updatedAt, open a PR
 ```
 

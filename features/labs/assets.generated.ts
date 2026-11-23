@@ -11,8 +11,8 @@ export const labAssets: Record<string, LabAssets> = {
       "light": "/labs/press-button/thumb-light.jpg"
     },
     "hover": {
-      "dark": "/labs/press-button/hover-dark.webm",
-      "light": "/labs/press-button/hover-light.webm"
+      "dark": "/labs/press-button/hover-dark.mp4",
+      "light": "/labs/press-button/hover-light.mp4"
     }
   },
   "soft-select": {
@@ -21,8 +21,8 @@ export const labAssets: Record<string, LabAssets> = {
       "light": "/labs/soft-select/thumb-light.jpg"
     },
     "hover": {
-      "dark": "/labs/soft-select/hover-dark.webm",
-      "light": "/labs/soft-select/hover-light.webm"
+      "dark": "/labs/soft-select/hover-dark.mp4",
+      "light": "/labs/soft-select/hover-light.mp4"
     }
   },
   "type-field": {
@@ -31,8 +31,8 @@ export const labAssets: Record<string, LabAssets> = {
       "light": "/labs/type-field/thumb-light.jpg"
     },
     "hover": {
-      "dark": "/labs/type-field/hover-dark.webm",
-      "light": "/labs/type-field/hover-light.webm"
+      "dark": "/labs/type-field/hover-dark.mp4",
+      "light": "/labs/type-field/hover-light.mp4"
     }
   },
   "value-scrubber-dial": {
@@ -41,8 +41,8 @@ export const labAssets: Record<string, LabAssets> = {
       "light": "/labs/value-scrubber-dial/thumb-light.jpg"
     },
     "hover": {
-      "dark": "/labs/value-scrubber-dial/hover-dark.webm",
-      "light": "/labs/value-scrubber-dial/hover-light.webm"
+      "dark": "/labs/value-scrubber-dial/hover-dark.mp4",
+      "light": "/labs/value-scrubber-dial/hover-light.mp4"
     }
   }
 };

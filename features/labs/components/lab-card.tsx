@@ -43,19 +43,22 @@ export function LabCard({ lab }: { lab: LabCardData }) {
   }, [playing, hover]);
 
   return (
+    <ViewTransition name={`lab-${lab.slug}`} share="lab-morph" default="none">
     <div
-      className="group relative isolate rounded-[2rem] bg-stage p-2 transition-transform duration-300 ease-out active:scale-[0.99]"
+      className="group relative isolate rounded-[2rem] bg-stage p-2"
       onPointerEnter={(e) => e.pointerType === "mouse" && hover && setPlaying(true)}
       onPointerLeave={(e) => e.pointerType === "mouse" && setPlaying(false)}
     >
       <Link
         href={`/labs/${lab.slug}`}
-        transitionTypes={["nav-forward"]}
+        // Resolve the detail page's params-dependent content before the click,
+        // so the stage exists in the same commit and the shared-element morph can form.
+        prefetch={true}
+        transitionTypes={["lab-open"]}
         aria-label={lab.title}
         className="absolute inset-0 z-0 rounded-[2rem] outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--focus-ring)]"
       />
-      <ViewTransition name={`lab-${lab.slug}`} share="lab-morph" default="none">
-        <div className="pointer-events-none relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-inset">
+      <div className="pointer-events-none relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-inset">
           {hasThumb ? (
             <>
               {lab.assets.thumb.dark && (
@@ -78,11 +81,16 @@ export function LabCard({ lab }: { lab: LabCardData }) {
               loop
               playsInline
               preload="none"
+              width={960}
+              height={720}
+              disablePictureInPicture
+              disableRemotePlayback
+              poster={lab.assets.thumb[theme] ?? lab.assets.thumb.dark ?? lab.assets.thumb.light}
+              style={{ objectFit: "cover", width: "100%", height: "100%" }}
               className={`absolute inset-0 size-full object-cover transition-opacity duration-200 ${playing ? "opacity-100" : "opacity-0"}`}
             />
           )}
         </div>
-      </ViewTransition>
 
       <div className="pointer-events-none absolute left-5 top-5 flex gap-2">
         {lab.isNew && <span className="rounded-full bg-inset-2 px-2.5 py-1 text-caption">New</span>}
@@ -105,5 +113,6 @@ export function LabCard({ lab }: { lab: LabCardData }) {
         )}
       </div>
     </div>
+    </ViewTransition>
   );
 }

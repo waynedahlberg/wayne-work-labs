@@ -43,7 +43,7 @@ const assets = Object.fromEntries(
       s,
       {
         thumb: { dark: pick("thumb-dark.jpg"), light: pick("thumb-light.jpg") },
-        hover: { dark: pick("hover-dark.webm"), light: pick("hover-light.webm") },
+        hover: { dark: pick("hover-dark.mp4"), light: pick("hover-light.mp4") },
       },
     ];
   }),

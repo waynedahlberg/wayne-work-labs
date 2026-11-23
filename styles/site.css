@@ -81,17 +81,48 @@ html.dark .shiki span {
 ::view-transition {
   pointer-events: none;
 }
+/* Card ↔ stage morph. The group clips to a fixed radius so corners never
+   stretch with the snapshot; old/new fill the group and crossfade (thumbnail
+   out, live demo in) instead of being squashed to their own aspect ratios. */
 ::view-transition-group(.lab-morph) {
-  animation-duration: 420ms;
-  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-duration: 560ms;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+  border-radius: 2rem;
+  overflow: clip;
 }
 ::view-transition-image-pair(.lab-morph) {
-  animation-name: lab-via-blur;
+  isolation: auto;
 }
-@keyframes lab-via-blur {
-  30% {
-    filter: blur(2px);
+::view-transition-old(.lab-morph),
+::view-transition-new(.lab-morph) {
+  height: 100%;
+  width: 100%;
+  object-fit: cover;
+  object-position: top center;
+  mix-blend-mode: normal;
+}
+::view-transition-old(.lab-morph) {
+  animation: 240ms ease-in both lab-morph-out;
+}
+::view-transition-new(.lab-morph) {
+  animation: 320ms ease-out 140ms both lab-morph-in;
+}
+@keyframes lab-morph-out {
+  to {
+    opacity: 0;
   }
+}
+@keyframes lab-morph-in {
+  from {
+    opacity: 0;
+  }
+}
+/* The rest of the page just crossfades during a morph. */
+::view-transition-old(.lab-fade) {
+  animation: 180ms ease-in both lab-fade reverse;
+}
+::view-transition-new(.lab-fade) {
+  animation: 260ms ease-out 120ms both lab-fade;
 }
 ::view-transition-old(.nav-forward) {
   --slide-offset: -40px;

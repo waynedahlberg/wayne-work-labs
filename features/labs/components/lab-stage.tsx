@@ -7,6 +7,7 @@ import { defaultValues, randomValues } from "../define";
 import { demos } from "../demos.generated";
 import type { Control, CursorStep, LabValues } from "../types";
 import { CodePanel } from "./code-panel";
+import { DemoBoundary } from "./demo-boundary";
 import { Inspector } from "./inspector";
 import { useCursorScript } from "./use-cursor-script";
 import { Button } from "@/components/ui/button";
@@ -101,10 +102,11 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
 
   return (
     <div className={`grid grid-cols-[minmax(0,1fr)] gap-3 lg:rounded-[2rem] lg:bg-stage ${showInspector ? "lg:grid-cols-[minmax(0,1fr)_288px]" : ""}`}>
-      <section className="flex min-h-[26rem] min-w-0 flex-col rounded-[2rem] bg-stage p-3 lg:min-h-[35rem] lg:bg-transparent">
+      <ViewTransition name={`lab-${slug}`} share="lab-morph" default="none">
+      <section className="flex min-h-[26rem] min-w-0 flex-col rounded-[2rem] bg-stage p-3 lg:min-h-[35rem]">
         <div className="flex items-center gap-2">
           <Tooltip content="All labs" side="bottom">
-            <Link href="/labs" transitionTypes={["nav-back"]} aria-label="Back to labs" className={circle}>
+            <Link href="/labs" transitionTypes={["lab-close"]} aria-label="Back to labs" className={circle}>
               <ArrowLeft className="size-4" />
             </Link>
           </Tooltip>
@@ -132,8 +134,7 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
 
         {mode === 0 ? (
           <div ref={previewRef} className="relative mt-2 flex flex-1 items-center justify-center overflow-hidden rounded-[1.5rem]">
-            <ViewTransition name={`lab-${slug}`} share="lab-morph" default="none">
-              <div className="flex w-full items-center justify-center p-6 sm:p-10">
+            <div className="flex w-full items-center justify-center p-6 sm:p-10">
                 {kind === "video" && video ? (
                   <video
                     src={video.src}
@@ -146,12 +147,13 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
                     autoPlay
                   />
                 ) : Demo ? (
-                  <Suspense fallback={<Skeleton className="h-40 w-64 rounded-3xl" />}>
-                    <Demo values={values} />
-                  </Suspense>
+                  <DemoBoundary slug={slug}>
+                    <Suspense fallback={<Skeleton className="h-40 w-64 rounded-3xl" />}>
+                      <Demo values={values} />
+                    </Suspense>
+                  </DemoBoundary>
                 ) : null}
-              </div>
-            </ViewTransition>
+            </div>
             {script.overlay}
 
             <div className="absolute bottom-3 right-3 z-10 flex gap-2">
@@ -182,6 +184,7 @@ export function LabStage({ slug, title, kind, controls, cursor, video, code }: L
           </div>
         )}
       </section>
+      </ViewTransition>
 
       {showInspector && (
         <aside className="rounded-[2rem] bg-stage lg:rounded-none lg:bg-transparent">
