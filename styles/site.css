@@ -12,6 +12,15 @@
   --radius-inset: 1.5rem;
 }
 
+/* Allo roundness axis (0 sharp … 100 round). 50 is Allo's "friendly" default.
+   Note: FF sets font-variation-settings for weight on some labels, which
+   resets unlisted axes to their default, so keep this at the default (50)
+   unless those call sites also carry ROND. */
+html {
+  --allo-rond: 50;
+  font-variation-settings: "ROND" var(--allo-rond);
+}
+
 html:root {
   --background: #f7f7f5;
   --stage: #ececea;

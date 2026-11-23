@@ -103,10 +103,16 @@ export function useCursorScript({
       return el;
     };
 
-    // Start from the container's lower-right, out of the way.
+    // Appear on the first target instead of sweeping in from a corner, so
+    // the clip has no lateral travel before anything happens.
+    const firstTarget = steps.find((st) => "to" in st && st.to) as { to: string } | undefined;
+    const startEl = firstTarget ? find(firstTarget.to) : null;
     const box = container.current?.getBoundingClientRect();
-    setCursor({ x: (box?.width ?? 400) * 0.8, y: (box?.height ?? 300) * 0.85, visible: true, down: false, ms: 0 });
+    const start = startEl ? toLocal(startEl) : { x: (box?.width ?? 400) / 2, y: (box?.height ?? 300) / 2 };
+    setCursor({ ...start, visible: false, down: false, ms: 0 });
     await sleep(60);
+    setCursor((c) => ({ ...c, visible: true }));
+    await sleep(250);
 
     for (const [index, step] of steps.entries()) {
       if (!alive()) return;
