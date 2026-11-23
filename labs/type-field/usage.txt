@@ -1,0 +1,3 @@
+import { TypeField } from "./TypeField";
+
+<TypeField label="Email address" shake={8} live={false} />

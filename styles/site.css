@@ -1,0 +1,146 @@
+/* Site-wide tokens that sit on top of Fluid Functionalism's. Single source of
+   truth for the labs surfaces: page → stage (the big rounded container) →
+   inset (rows and code wells inside it). No borders: depth comes from tone.
+   Selectors are `html:root` / `html.dark` so they win over globals.css
+   regardless of import order. */
+
+@theme inline {
+  --color-stage: var(--stage);
+  --color-inset: var(--inset);
+  --color-inset-2: var(--inset-2);
+  --radius-stage: 2rem;
+  --radius-inset: 1.5rem;
+}
+
+html:root {
+  --background: #f7f7f5;
+  --stage: #ececea;
+  --inset: #f6f6f4;
+  --inset-2: #e3e3e0;
+}
+
+html.dark {
+  --background: #0a0a0a;
+  --stage: #171717;
+  --inset: #0e0e0e;
+  --inset-2: #232323;
+}
+
+/* ---- Shiki: dual theme through CSS variables, numbered lines ------------ */
+.shiki,
+.shiki span {
+  color: var(--shiki-light);
+  background-color: transparent !important;
+}
+html.dark .shiki,
+html.dark .shiki span {
+  color: var(--shiki-dark);
+}
+.shiki {
+  counter-reset: line;
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  line-height: 22px;
+  margin: 0;
+  padding: 16px 0;
+  tab-size: 2;
+}
+.shiki code {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
+.shiki .line {
+  display: inline-block;
+  min-height: 22px;
+  width: 100%;
+  padding-right: 20px;
+}
+.shiki .line::before {
+  counter-increment: line;
+  content: counter(line);
+  display: inline-block;
+  width: 3.25ch;
+  margin: 0 1.25ch 0 16px;
+  text-align: right;
+  color: var(--muted-foreground);
+  opacity: 0.55;
+  user-select: none;
+}
+
+/* ---- View transitions (React <ViewTransition> + Link transitionTypes) ---- */
+::view-transition {
+  pointer-events: none;
+}
+::view-transition-group(.lab-morph) {
+  animation-duration: 420ms;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+::view-transition-image-pair(.lab-morph) {
+  animation-name: lab-via-blur;
+}
+@keyframes lab-via-blur {
+  30% {
+    filter: blur(2px);
+  }
+}
+::view-transition-old(.nav-forward) {
+  --slide-offset: -40px;
+  animation:
+    150ms ease-in both lab-fade reverse,
+    380ms cubic-bezier(0.22, 1, 0.36, 1) both lab-slide reverse;
+}
+::view-transition-new(.nav-forward) {
+  --slide-offset: 40px;
+  animation:
+    210ms ease-out 120ms both lab-fade,
+    380ms cubic-bezier(0.22, 1, 0.36, 1) both lab-slide;
+}
+::view-transition-old(.nav-back) {
+  --slide-offset: 40px;
+  animation:
+    150ms ease-in both lab-fade reverse,
+    380ms cubic-bezier(0.22, 1, 0.36, 1) both lab-slide reverse;
+}
+::view-transition-new(.nav-back) {
+  --slide-offset: -40px;
+  animation:
+    210ms ease-out 120ms both lab-fade,
+    380ms cubic-bezier(0.22, 1, 0.36, 1) both lab-slide;
+}
+@keyframes lab-fade {
+  from {
+    filter: blur(3px);
+    opacity: 0;
+  }
+  to {
+    filter: blur(0);
+    opacity: 1;
+  }
+}
+@keyframes lab-slide {
+  from {
+    translate: var(--slide-offset);
+  }
+  to {
+    translate: 0;
+  }
+}
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

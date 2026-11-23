@@ -1,0 +1,12 @@
+import { SoftSelect } from "./SoftSelect";
+
+<SoftSelect
+  options={[
+    { value: "type", label: "Typography" },
+    { value: "color", label: "Color" },
+  ]}
+  defaultValue="color"
+  shape="pill"
+  stagger={20}
+  onChange={(v) => console.log(v)}
+/>

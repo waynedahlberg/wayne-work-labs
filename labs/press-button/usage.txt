@@ -1,0 +1,9 @@
+import { PressButton } from "./PressButton";
+
+<PressButton
+  label="Send"
+  tone="solid"
+  depth={6}
+  duration={1400}
+  onPress={() => console.log("sent")}
+/>
